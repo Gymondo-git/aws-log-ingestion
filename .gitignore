@@ -17,8 +17,10 @@ packaged.yaml
 samconfig.toml
 /src/requirements.txt
 
+.terraform
 .serverless
 node_modules
 package.json
 package-lock.json
 *.zip
+
