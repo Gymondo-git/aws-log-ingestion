@@ -561,7 +561,7 @@ def _enhance_with_kubernetes_metadata(attributes):
     try:
         attributes.update({
             "kubernetes": {
-                "cluster_name": log_stream_metadata.group("clusterName"),
+                "cluster_name": log_group_metadata.group("clusterName"),
                 "container_name": log_stream_metadata.group("containerName"),
                 "docker_id": log_stream_metadata.group("dockerId"),
                 "environment": log_group_metadata.group("environment"),
