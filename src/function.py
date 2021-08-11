@@ -587,10 +587,11 @@ def _enhance_with_kubernetes_metadata(attributes):
 
     try:
         r = requests.get('https://api.newrelic.com/v2/applications.json', data={"filter[name]": service_name},
-                         headers={"Api-Key": os.getenv("NEW_RELIC_API_KEY", "")})
+                         headers={"Api-Key": os.getenv("NEW_RELIC_API_KEY", "")},
+                         timeout=1)
 
-        guid = b64encode(
-            str.encode(f'{os.getenv("NEW_RELIC_ACCOUNT_ID", "")}|APM|APPLICATION|{r.json()["applications"][0]["id"]}'))
+        guid = str(b64encode(
+            str.encode(f'{os.getenv("NEW_RELIC_ACCOUNT_ID", "")}|APM|APPLICATION|{r.json()["applications"][0]["id"]}')))
         attributes.update({
             "entity": {
                 "type": "SERVICE",
