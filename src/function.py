@@ -572,7 +572,7 @@ def _enhance_with_kubernetes_metadata(attributes):
             },
             "entity": {
                 "type": "SERVICE",
-                "name": log_stream_metadata.group("deploymentName")
+                "name": f'{log_stream_metadata.group("deploymentName")}-{log_group_metadata.group("environment")}'
             }
         })
     except:
