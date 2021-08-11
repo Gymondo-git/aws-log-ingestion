@@ -43,10 +43,12 @@ import os
 import re
 import time
 from base64 import b64decode
+from base64 import b64encode
 from enum import Enum
 from urllib import request
 
 import aiohttp
+import requests
 
 logger = logging.getLogger()
 
@@ -558,10 +560,14 @@ def _enhance_with_kubernetes_metadata(attributes):
       - entity.guids
     """
 
+    service_name = ""
+
     log_stream_metadata = KUBERNETES_METADATA_LOG_STREAM_PATTERN.match(attributes["aws"]["logStream"])
     log_group_metadata = KUBERNETES_METADATA_LOG_GROUP_PATTERN.match(attributes["aws"]["logGroup"])
 
     try:
+        service_name = f'{log_stream_metadata.group("deploymentName")}-{log_group_metadata.group("environment")}'
+
         attributes.update({
             "kubernetes": {
                 "cluster_name": log_group_metadata.group("clusterName"),
@@ -574,14 +580,27 @@ def _enhance_with_kubernetes_metadata(attributes):
                 "namespace_name": log_stream_metadata.group("namespace"),
                 "hostname": log_stream_metadata.group("podName"),
                 "pod_name": log_stream_metadata.group("podName"),
-            },
-            "entity": {
-                "type": "SERVICE",
-                "name": f'{log_stream_metadata.group("deploymentName")}-{log_group_metadata.group("environment")}'
             }
         })
     except:
         logger.warning(f'Could not extract kubernetes metadata from entry {json.dumps(attributes)}')
+
+    try:
+        r = requests.get('https://api.newrelic.com/v2/applications.json', data={"filter[name]": service_name},
+                         headers={"Api-Key": os.getenv("NEW_RELIC_API_KEY", "")})
+
+        guid = b64encode(
+            str.encode(f'{os.getenv("NEW_RELIC_ACCOUNT_ID", "")}|APM|APPLICATION|{r.json()["applications"][0]["id"]}'))
+        attributes.update({
+            "entity": {
+                "type": "SERVICE",
+                "name": service_name,
+                "guid": guid,
+                "guids": guid,
+            }}
+        )
+    except:
+        logger.warning(f'Could not get app id from {service_name}')
 
     return attributes
 

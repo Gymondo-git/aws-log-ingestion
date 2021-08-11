@@ -53,5 +53,13 @@ variable "account_id" {
 
 variable "log_groups" {
   description = "The log groups that should be monitored"
-  type = any
+  type        = any
+}
+
+variable "newrelic_api_key" {
+  sensitive = true
+}
+
+variable "newrelic_account_id" {
+  sensitive = true
 }

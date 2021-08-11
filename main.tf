@@ -19,6 +19,8 @@ module "this" {
       LICENSE_KEY           = var.license_key
       LOGGING_ENABLED       = var.enable_logging
       DEBUG_LOGGING_ENABLED = var.enable_debug_logging
+      NEW_RELIC_API_KEY     = var.newrelic_api_key
+      NEW_RELIC_ACCOUNT_ID  = var.newrelic_account_id
     }
   }
 
@@ -48,5 +50,5 @@ resource "aws_cloudwatch_log_subscription_filter" "this" {
   filter_pattern  = lookup(each.value, "filter_pattern")
   destination_arn = module.this.function_arn
 
-  depends_on      = [aws_lambda_permission.this]
+  depends_on = [aws_lambda_permission.this]
 }
