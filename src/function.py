@@ -98,7 +98,7 @@ REQUEST_ID_PATTERN = re.compile(r"RequestId:\s([-a-zA-Z0-9]{36})\s(.*)", re.DOTA
 KUBERNETES_METADATA_LOG_GROUP_PATTERN = re.compile(
     r'^\/aws\/containerinsights\/(?P<clusterName>[a-z0-9-]+-(?P<environment>[a-z0-9-]+))\/.+$')
 KUBERNETES_METADATA_LOG_STREAM_PATTERN = re.compile(
-    r'^.+\.var\.log\.containers\.(?P<podName>(?P<deploymentName>[a-zA-Z0-9-]+)-[a-z0-9-]+-[a-z0-9-]+)_(?P<namespace>[a-z0-9-]+)_(?P<containerName>[a-z0-9-]+)-(?P<dockerId>[a-z0-9-]+)\.log$')
+    r'^.+\.var\.log\.containers\.(?P<podName>(?P<deploymentName>[a-zA-Z0-9-]+)-(?P<podTemplateHash>[a-zA-Z0-9-]+)-[a-z0-9-]+)_(?P<namespace>[a-z0-9-]+)_(?P<containerName>[a-z0-9-]+)-(?P<dockerId>[a-z0-9-]+)\.log$')
 
 
 class EntryType(Enum):
@@ -552,7 +552,10 @@ def _package_log_payload(data):
 
 def _enhance_with_kubernetes_metadata(attributes):
     """
-    Enhance attributes with kubernetes metadata
+    Enhance attributes with kubernetes metadata the way newrelic logging does
+    Some important information can not be retrieved, so that the link from log entry to APM does not work:
+      - entity.guid
+      - entity.guids
     """
 
     log_stream_metadata = KUBERNETES_METADATA_LOG_STREAM_PATTERN.match(attributes["aws"]["logStream"])
@@ -567,7 +570,9 @@ def _enhance_with_kubernetes_metadata(attributes):
                 "environment": log_group_metadata.group("environment"),
                 "labels.app.kubernetes.io/instance": log_stream_metadata.group("deploymentName"),
                 "labels.app.kubernetes.io/name": log_stream_metadata.group("deploymentName"),
+                "labels.pod-template-hash": log_stream_metadata.group("podTemplateHash"),
                 "namespace_name": log_stream_metadata.group("namespace"),
+                "hostname": log_stream_metadata.group("podName"),
                 "pod_name": log_stream_metadata.group("podName"),
             },
             "entity": {
