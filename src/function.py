@@ -1,40 +1,29 @@
 """
 Copyright 2017 New Relic, Inc.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 This Lambda function receives log entries from CloudWatch Logs
 and pushes them to New Relic Infrastructure - Cloud integrations.
-
 It expects to be invoked based on CloudWatch Logs streams.
-
 New Relic's license key must be encrypted using KMS following these
 instructions:
-
 1. After creating the Lambda based on the Blueprint, select it and open the
 Environment Variables section.
-
 2. Check that the "LICENSE_KEY" environment variable if properly filled-in.
-
 3. If you changed anything, go to the start of the page and press "Save".
 Logs should start to be processed by the Lambda. To check if everything is
 functioning properly you can check the Monitoring tab and CloudWatch Logs.
-
 For more detailed documentation, check New Relic's documentation site:
 https://docs.newrelic.com/
 """
 
-import asyncio
 import datetime
 import gzip
 import json
@@ -42,13 +31,13 @@ import logging
 import os
 import re
 import time
+
 from base64 import b64decode
-from base64 import b64encode
 from enum import Enum
 from urllib import request
 
 import aiohttp
-import requests
+import asyncio
 
 logger = logging.getLogger()
 
@@ -259,7 +248,7 @@ async def _send_log_entry(log_entry, context):
         if _logging_enabled():
             data = {"context": context, "entry": json.dumps(log_entry)}
             for payload in _generate_payloads(
-                    _package_log_payload(data), _split_log_payload
+                _package_log_payload(data), _split_log_payload
             ):
                 requests.append(
                     _send_payload(_get_logging_request_creator(payload), session)
@@ -389,9 +378,9 @@ def _is_lambda_message(message):
     REPORT lines are not sufficient, just nice to have.
     """
     return (
-            LAMBDA_NR_MONITORING_PATTERN.match(message)
-            or TIMEOUT_PATTERN.match(message)
-            or REQUEST_ID_PATTERN.match(message)
+        LAMBDA_NR_MONITORING_PATTERN.match(message)
+        or TIMEOUT_PATTERN.match(message)
+        or REQUEST_ID_PATTERN.match(message)
     )
 
 
@@ -403,7 +392,7 @@ def _get_entry_type(log_entry):
     if log_group.startswith(VPC_LOG_GROUP_PREFIX):
         return EntryType.VPC
     elif log_group.startswith(LAMBDA_LOG_GROUP_PREFIX) and any(
-            _is_lambda_message(event["message"]) for event in log_entry["logEvents"]
+        _is_lambda_message(event["message"]) for event in log_entry["logEvents"]
     ):
         return EntryType.LAMBDA
     return EntryType.OTHER
@@ -590,8 +579,8 @@ def _enhance_with_kubernetes_metadata(attributes):
                          headers={"Api-Key": os.getenv("NEW_RELIC_API_KEY", "")},
                          timeout=1)
 
-        guid = str(b64encode(
-            str.encode(f'{os.getenv("NEW_RELIC_ACCOUNT_ID", "")}|APM|APPLICATION|{r.json()["applications"][0]["id"]}')))
+        guid_str = f'{os.getenv("NEW_RELIC_ACCOUNT_ID", "")}|APM|APPLICATION|{r.json()["applications"][0]["id"]}'
+        guid = b64encode(str.encode(guid_str)).decode('UTF-8')
         attributes.update({
             "entity": {
                 "type": "SERVICE",
