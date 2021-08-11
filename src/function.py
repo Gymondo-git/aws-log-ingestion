@@ -96,9 +96,9 @@ REQUEST_ID_PATTERN = re.compile(r"RequestId:\s([-a-zA-Z0-9]{36})\s(.*)", re.DOTA
 
 # extract kubernetes metadata from log stream and group
 KUBERNETES_METADATA_LOG_GROUP_PATTERN = re.compile(
-    r'^\/aws\/containerinsights\/(?P<clusterName>[a-z-]+-(?P<environment>[a-z-]+))\/.+$')
+    r'^\/aws\/containerinsights\/(?P<clusterName>[a-z0-9-]+-(?P<environment>[a-z0-9-]+))\/.+$')
 KUBERNETES_METADATA_LOG_STREAM_PATTERN = re.compile(
-    r'^.+\.var\.log\.containers\.(?P<podName>(?P<deploymentName>[a-zA-Z-]+)-[a-z0-9-]+)_(?P<namespace>[a-z0-9]+)_(?P<containerName>[a-z0-9-]+)-(?P<dockerId>[a-z0-9-]+)\.log$')
+    r'^.+\.var\.log\.containers\.(?P<podName>(?P<deploymentName>[a-zA-Z0-9-]+)-[a-z0-9-]+-[a-z0-9-]+)_(?P<namespace>[a-z0-9-]+)_(?P<containerName>[a-z0-9-]+)-(?P<dockerId>[a-z0-9-]+)\.log$')
 
 
 class EntryType(Enum):
