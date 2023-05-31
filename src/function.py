@@ -265,6 +265,9 @@ async def _send_log_entry(log_entry, context):
 async def _send_payload(request_creator, session, retry=False):
     try:
         req = request_creator()
+
+        logger.info(f'Request payload: {req.data}')
+
         status, url = await http_post(
             session, req.get_full_url(), req.data, req.headers
         )
