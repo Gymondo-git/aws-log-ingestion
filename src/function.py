@@ -214,6 +214,8 @@ async def _send_log_entry(log_entry, context):
         "log_stream_name": context.log_stream_name,
     }
 
+    logger.info(f'Log stream name: {context.log_stream_name}')
+
     session_timeout = _calculate_session_timeout()
 
     async with aiohttp.ClientSession(
@@ -496,6 +498,8 @@ def _package_log_payload(data):
     lambda_request_id = None
     trace_id = ""
 
+    logger.info(f'Cloudwatch log events: {json.dumps(data)}')
+
     for log_event in log_events:
         if LAMBDA_NR_MONITORING_PATTERN.match(log_event["message"]):
             trace_id = _get_trace_id(log_event["message"])
@@ -554,8 +558,12 @@ def _enhance_with_kubernetes_metadata(attributes):
 
     service_name = ""
 
+    logger.info(f'Received aws log stream data: {json.dumps(attributes["aws"]["logStream"])}')
+
     log_stream_metadata = KUBERNETES_METADATA_LOG_STREAM_PATTERN.match(attributes["aws"]["logStream"])
     log_group_metadata = KUBERNETES_METADATA_LOG_GROUP_PATTERN.match(attributes["aws"]["logGroup"])
+
+    logger.info(f'Parsed aws log stream data: {json.dumps(log_stream_metadata)}')
 
     try:
         service_name = f'{log_stream_metadata.group("deploymentName")}-{log_group_metadata.group("environment")}'
