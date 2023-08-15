@@ -74,6 +74,7 @@ INDIVIDUAL_REQUEST_TIMEOUT = aiohttp.ClientTimeout(
 SESSION_MAX_PROCESSING_TIME = 1
 
 LAMBDA_LOG_GROUP_PREFIX = os.getenv("NR_LAMBDA_LOG_GROUP_PREFIX", "/aws/lambda")
+CONTAINER_INSIGHTS_LOG_GROUP_PREFIX = "/aws/containerinsights"
 VPC_LOG_GROUP_PREFIX = os.getenv("NR_VPC_LOG_GROUP_PREFIX", "/aws/vpc/flow-logs")
 
 LAMBDA_NR_MONITORING_PATTERN = re.compile(r'.*"NR_LAMBDA_MONITORING')
@@ -524,17 +525,33 @@ def _package_log_payload(data):
     packaged_payload = [
         {
             "common": {
-                "attributes": _enhance_with_kubernetes_metadata({
+                "attributes": {
                     "plugin": LOGGING_PLUGIN_METADATA,
                     "aws": {
                         "logStream": entry["logStream"],
                         "logGroup": entry["logGroup"],
                     },
-                })
+                }
             },
             "logs": log_messages,
         }
     ]
+
+    if entry["logGroup"].startswith(CONTAINER_INSIGHTS_LOG_GROUP_PREFIX):
+        packaged_payload = [
+            {
+                "common": {
+                    "attributes": _enhance_with_kubernetes_metadata({
+                        "plugin": LOGGING_PLUGIN_METADATA,
+                        "aws": {
+                            "logStream": entry["logStream"],
+                            "logGroup": entry["logGroup"],
+                        },
+                    })
+                },
+                "logs": log_messages,
+            }
+        ]
 
     _get_newrelic_tags(packaged_payload)
 
