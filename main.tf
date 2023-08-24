@@ -4,7 +4,7 @@ module "this" {
   function_name = format("%s-%s", var.name, terraform.workspace)
   description   = "Send log data from CloudWatch Logs to New Relic Infrastructure (Cloud Integrations) and New Relic Logging."
   handler       = "function.lambda_handler"
-  runtime       = "python3.7"
+  runtime       = "python3.9"
   timeout       = 30
 
   source_path = format("%s/src", path.module)
