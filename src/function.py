@@ -31,8 +31,9 @@ import logging
 import os
 import re
 import time
+import requests as custom_request
 
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from enum import Enum
 from urllib import request
 
@@ -592,7 +593,7 @@ def _enhance_with_kubernetes_metadata(attributes):
         logger.warning(f'Could not extract kubernetes metadata from entry {json.dumps(attributes)}')
 
     try:
-        r = requests.get('https://api.newrelic.com/v2/applications.json', data={"filter[name]": service_name},
+        r = custom_request.get('https://api.newrelic.com/v2/applications.json', data={"filter[name]": service_name},
                          headers={"Api-Key": os.getenv("NEW_RELIC_API_KEY", "")},
                          timeout=1)
 
@@ -606,8 +607,9 @@ def _enhance_with_kubernetes_metadata(attributes):
                 "guids": guid,
             }}
         )
-    except:
+    except Exception as Argument:
         logger.warning(f'Could not get app id from {service_name}')
+        logger.warning(str(Argument))
 
     return attributes
 
