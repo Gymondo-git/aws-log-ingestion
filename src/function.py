@@ -93,6 +93,8 @@ KUBERNETES_METADATA_LOG_GROUP_PATTERN = re.compile(
 KUBERNETES_METADATA_LOG_STREAM_PATTERN = re.compile(
     r'^.+\.var\.log\.containers\.(?P<podName>(?P<deploymentName>[a-zA-Z0-9-]+)-(?P<podTemplateHash>[a-zA-Z0-9-]+)-[a-z0-9-]+)_(?P<namespace>[a-z0-9-]+)_(?P<containerName>[a-z0-9-]+)-(?P<dockerId>[a-z0-9-]+)\.log$')
 
+KUBERNETES_LOG_MESSAGE_PATTERN = re.compile("[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2}T[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}.*(stdout|stderr) F ")
+KUBERNETES_LOG_MESSAGE_NEWRELIC_PATTERN = re.compile("\([0-9]{1}\) [0-9]{1,4}\/[0-9]{1,2}\/[0-9]{1,2} [0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}.* {")
 
 class EntryType(Enum):
     VPC = "vpc"
@@ -498,6 +500,15 @@ def _package_log_payload(data):
     for log_event in log_events:
         if LAMBDA_NR_MONITORING_PATTERN.match(log_event["message"]):
             trace_id = _get_trace_id(log_event["message"])
+
+        if entry["logGroup"].startswith(CONTAINER_INSIGHTS_LOG_GROUP_PREFIX):
+            if KUBERNETES_LOG_MESSAGE_PATTERN.search(log_event["message"]):
+                message = KUBERNETES_LOG_MESSAGE_PATTERN.sub("", log_event["message"])
+                log_event["message"] = message
+
+            if KUBERNETES_LOG_MESSAGE_NEWRELIC_PATTERN.search(log_event["message"]):
+                message = KUBERNETES_LOG_MESSAGE_NEWRELIC_PATTERN.sub("{", log_event["message"])
+                log_event["message"] = message
 
         log_message = {
             "message": log_event["message"],
