@@ -3,14 +3,6 @@ variable "name" {
   description = "The name of the lambda function"
 }
 
-variable "policy" {
-  type = object({
-    json = string
-  })
-  description = "An additional policy to attach to the Lambda function role"
-  default     = null
-}
-
 variable "enable_infra" {
   type        = string
   description = "Determines if logs are forwarded to New Relic Infrastructure"
@@ -54,6 +46,12 @@ variable "account_id" {
 variable "log_groups" {
   description = "The log groups that should be monitored"
   type        = any
+}
+
+variable "log_group_permission_arns" {
+  type        = map(string)
+  description = "The arns that should be used for the log groups lambda permission"
+  default     = {}
 }
 
 variable "newrelic_api_key" {
